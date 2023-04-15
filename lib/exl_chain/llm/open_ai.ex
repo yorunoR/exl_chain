@@ -1,6 +1,7 @@
 defmodule ExlChain.LLM.OpenAI do
   alias Eoai.Client
   alias Eoai.Request
+  alias Eoai.Response
 
   def new do
     Client.new()
@@ -15,6 +16,7 @@ defmodule ExlChain.LLM.OpenAI do
     }
 
     Request.call(client, :chat, params)
+    |> Response.dig(["choices", 0, "message", "content"])
   end
 
   def call(client, template, params) do
