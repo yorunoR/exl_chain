@@ -1,13 +1,16 @@
 defmodule ExlChain.LLM.OpenAI do
+  defstruct client: nil
+
+  alias __MODULE__
   alias Eoai.Client
   alias Eoai.Request
   alias Eoai.Response
 
   def new do
-    Client.new()
+    %OpenAI{client: Client.new()}
   end
 
-  def call(client, content) do
+  def call(llm, content) do
     params = %{
       model: "gpt-3.5-turbo",
       messages: [
@@ -15,12 +18,7 @@ defmodule ExlChain.LLM.OpenAI do
       ]
     }
 
-    Request.call(client, :chat, params)
+    Request.call(llm.client, :chat, params)
     |> Response.dig(["choices", 0, "message", "content"])
-  end
-
-  def call(client, template, params) do
-    content = template.(params)
-    call(client, content)
   end
 end
