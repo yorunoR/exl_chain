@@ -21,7 +21,8 @@ defmodule ExlChain.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:eoai, git: "https://github.com/yorunoR/eoai.git", tag: "0.1.0"}
+      {:eoai, git: "https://github.com/yorunoR/eoai.git", branch: "develop"},
+      {:matsukasa, git: "https://github.com/yorunoR/matsukasa.git", branch: "main"}
     ]
   end
 end
