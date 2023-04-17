@@ -31,8 +31,12 @@ Prepare configuration file `config/config.exs`.
 import Config
 
 config :eoai,
-  api_key: "your-api-key",
+  api_key: "your-openai-api-key",
   organization_key: "your-organization-key" # option
+
+config :matsukasa,
+  api_key: "your-pinecone-api-key",
+  environment: "your-environment"
 ```
 
 ## Example
@@ -44,7 +48,7 @@ alias ExlChain.LLM.OpenAI
 
 proc = fn ->
   OpenAI.new()
-  |> LLM.call("こんにちは！")
+  |> LLM.call(:chat, "こんにちは！")
 end
 
 proc.()
@@ -60,7 +64,7 @@ proc = fn ->
   template = Template.new(["menu"], "{menu}を作るために必要な材料は")
 
   OpenAI.new()
-  |> LLM.call(template, %{
+  |> LLM.call(:chat, template, %{
     "menu" => "カレー"
   })
 end
@@ -84,14 +88,89 @@ proc = fn ->
   Chain.new(params)
   |> Chain.puts("product")
   |> Chain.connect("company_name", fn params ->
-    LLM.call(llm, template1, params)
+    LLM.call(llm, :chat, template1, params)
   end)
   |> Chain.puts("company_name")
   |> Chain.connect("catch_copy", fn params ->
-    LLM.call(llm, template2, params)
+    LLM.call(llm, :chat, template2, params)
   end)
   |> Chain.puts("catch_copy")
   |> Chain.finish()
+end
+
+proc.()
+```
+
+### Save your text to pinecone index.
+```elixir
+alias ExlChain.LLM
+alias ExlChain.LLM.OpenAI
+alias ExlChain.Index
+alias ExlChain.Index.Pinecone
+
+proc = fn ->
+  namespace = "your_namespace"
+
+  sentences =
+    File.read!("your_text_file")
+    |> String.split("your_separator")
+    |> Enum.map(fn sentence -> String.replace(sentence, "\n", "") end)
+
+  llm = OpenAI.new("text-embedding-ada-002")
+  index = Pinecone.new("your_pinecone_index")
+
+  sentences
+  |> Enum.with_index(1)
+  |> Enum.each(fn {sentence, i} ->
+    # to avoid access limit
+    :timer.sleep(200)
+
+    IO.inspect(sentence)
+
+    values = LLM.call(llm, :embeddings, sentence)
+
+    json = %{
+      vectors: %{
+        id: to_string(i),
+        values: values,
+        metadata: %{sentence: sentence}
+      },
+      namespace: namespace
+    }
+
+    Index.call(index, :upsert, json)
+  end)
+end
+
+proc.()
+```
+
+### Get sentences from pinecone index.
+```elixir
+alias ExlChain.LLM
+alias ExlChain.LLM.OpenAI
+alias ExlChain.Index
+alias ExlChain.Index.Pinecone
+
+proc = fn ->
+  namespace = "your_namespace"
+  question = "your_question"
+
+  llm = OpenAI.new("text-embedding-ada-002")
+  index = Pinecone.new("your_pinecone_index")
+
+  vector = LLM.call(llm, :embeddings, question)
+
+  json = %{
+    namespace: namespace,
+    includeValues: false,
+    includeMetadata: true,
+    topK: 10,
+    vector: vector
+  }
+
+  Index.call(index, :query, json)
+  |> Enum.sort_by(&(&1["score"]))
 end
 
 proc.()
