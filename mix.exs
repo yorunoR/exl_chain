@@ -22,7 +22,9 @@ defmodule ExlChain.MixProject do
   defp deps do
     [
       {:eoai, git: "https://github.com/yorunoR/eoai.git", branch: "develop"},
-      {:matsukasa, git: "https://github.com/yorunoR/matsukasa.git", branch: "main"}
+      {:matsukasa, git: "https://github.com/yorunoR/matsukasa.git", branch: "main"},
+      {:ex_faiss, github: "elixir-nx/ex_faiss"},
+      {:nx, "~> 0.5"}
     ]
   end
 end
