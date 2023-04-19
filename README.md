@@ -14,7 +14,7 @@ by adding `exl_chain` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:exl_chain, git: "https://github.com/yorunoR/exl_chain.git", tag: "0.1.0"}
+    {:exl_chain, git: "https://github.com/yorunoR/exl_chain.git", branch: "main"}
   ]
 end
 ```
@@ -37,6 +37,12 @@ config :eoai,
 config :matsukasa,
   api_key: "your-pinecone-api-key",
   environment: "your-environment"
+```
+
+Install libraries for ExFaiss.
+```
+sudo apt-get update
+sudo apt-get install libopenblas-dev cmake
 ```
 
 ## Example
@@ -171,6 +177,66 @@ proc = fn ->
 
   Index.call(index, :query, json)
   |> Enum.sort_by(&(&1["score"]))
+end
+
+proc.()
+```
+
+### Your text with faiss index.
+```elixir
+alias ExlChain.LLM
+alias ExlChain.LLM.OpenAI
+alias ExlChain.Index
+alias ExlChain.Index.Faiss
+
+proc = fn ->
+  sentences =
+    File.read!("your_text_file")
+    |> String.split("your_separator")
+    |> Enum.map(fn sentence -> String.replace(sentence, "\n", "") end)
+
+  llm = OpenAI.new("text-embedding-ada-002")
+  index = Faiss.new("your_index_name")
+
+  sentences
+  |> Enum.with_index(0)
+  |> Enum.each(fn {sentence, i} ->
+    # For access limit
+    :timer.sleep(400)
+
+    IO.inspect(sentence)
+
+    values = LLM.call(llm, :embeddings, sentence)
+
+    json = %{
+      dataset: [values],
+      ids: [i]
+    }
+
+    Index.call(index, :add, json)
+  end)
+
+  IO.puts("\n--- Saved your text ---\n")
+
+  question = "your_question" |> IO.inspect()
+
+  query = LLM.call(llm, :embeddings, question)
+
+  json = %{
+    query: query,
+    topK: 10
+  }
+
+  response = Index.call(index, :search, json)
+
+  IO.puts("\n--- Result ---\n")
+
+  response.labels
+  |> Nx.to_flat_list()
+  |> IO.inspect()
+  |> Enum.each(fn index ->
+    Enum.at(sentences, index) |> IO.inspect()
+  end)
 end
 
 proc.()
