@@ -11,6 +11,10 @@ defmodule ExlChain.Index.Pinecone do
     }
   end
 
+  def delete(index, json) do
+    Vector.call(index.client, :delete, json: json)
+  end
+
   def upsert(index, json) do
     Vector.call(index.client, :upsert, json: json)
   end
