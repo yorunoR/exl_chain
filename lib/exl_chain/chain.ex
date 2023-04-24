@@ -27,8 +27,9 @@ defmodule ExlChain.Chain do
     })
   end
 
-  def finish(_chain) do
+  def finish(chain) do
     IO.puts("=== End ===")
+    chain.params
   end
 
   defp deep_merge(map1, map2) when is_map(map1) and is_map(map2) do
