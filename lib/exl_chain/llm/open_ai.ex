@@ -22,7 +22,7 @@ defmodule ExlChain.LLM.OpenAI do
     }
 
     Request.call(llm.client, :chat, params)
-    |> Response.dig(["choices", 0, "message", "content"])
+    |> Response.dig!(["choices", 0, "message", "content"])
   end
 
   def embeddings(llm, sentence) do
@@ -34,7 +34,7 @@ defmodule ExlChain.LLM.OpenAI do
     response = Request.call(llm.client, :embeddings, params)
 
     case response.status do
-      200 -> Response.dig(response, ["data", 0, "embedding"])
+      200 -> Response.dig!(response, ["data", 0, "embedding"])
       _ -> IO.inspect(response)
     end
   end
