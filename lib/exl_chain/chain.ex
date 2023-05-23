@@ -27,6 +27,11 @@ defmodule ExlChain.Chain do
     })
   end
 
+  def drop(chain, keys) do
+    params = Map.drop(chain.params, keys)
+    %{chain | params: params}
+  end
+
   def finish(chain) do
     IO.puts("=== End ===")
     chain.params
