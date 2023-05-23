@@ -1,10 +1,10 @@
 defmodule ExlChain.Template do
-  def new(input_valiables, template) do
+  def new(input_variables, template) do
     fn params ->
-      input_valiables
-      |> Enum.reduce(template, fn input_valiable, template ->
-        replace = Map.get(params, input_valiable)
-        Regex.replace(~r/{#{input_valiable}}/, template, replace)
+      input_variables
+      |> Enum.reduce(template, fn input_variable, template ->
+        replace = Map.get(params, input_variable)
+        Regex.replace(~r/{#{input_variable}}/, template, replace)
       end)
     end
   end
