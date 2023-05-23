@@ -152,6 +152,41 @@ end
 proc.()
 ```
 
+```elixir
+alias ExlChain.LLM
+alias ExlChain.LLM.OpenAI
+alias ExlChain.Template
+alias ExlChain.Template.ToJson
+alias ExlChain.Chain
+
+proc = fn ->
+  llm = OpenAI.new(temperature: 0)
+  to_json = Template.new(ToJson.keys(), ToJson.template())
+  to_json_data_key = ToJson.data_key()
+  to_json_keys_key = ToJson.keys_key()
+
+  data = """
+  * タイトル：吾輩は猫である、作者：夏目漱石
+  * タイトル：走れメロス、作者：太宰治
+  """
+
+  params = %{
+    to_json_data_key => data,
+    to_json_keys_key => ["title", "author"] |> Enum.join(", ")
+  }
+
+  Chain.new(params)
+  |> Chain.connect("result", fn params ->
+    LLM.call(llm, :chat, to_json, params)
+  end)
+  |> Chain.drop([to_json_data_key, to_json_keys_key])
+  |> Chain.puts("result")
+  |> Chain.finish()
+end
+
+proc.()
+```
+
 ### Save your text to pinecone index.
 ```elixir
 alias ExlChain.LLM
